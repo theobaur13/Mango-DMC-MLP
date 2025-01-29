@@ -4,6 +4,7 @@ from src.helper import sigmoid, relu
 def init_weights(p, U, L, seed=0):
     np.random.seed(seed)
     
+    # Randomly initialise weight matrix W. W(1) has dimensions of U1 x p, W(l) has dimensions of Ul x Ul-1. W(L) has dimensions of 1 x UL.
     weights = []
     for i in range(L):
         if i == 0 and L == 1:
@@ -34,7 +35,7 @@ def init_biases(U, L, seed=0):
 # U = number of hidden layer neurons
 # L = number of layers
 
-def nn_matrix(data, rand_U=True, seed=0, L=1, U_limit=10):
+def nn_matrix(data, rand_U=True, seed=0, L=3, U_limit=10, pre_weights=None, pre_biases=None):
     # Calculate variables for input layer
     p = data.shape[1]                               # Number of features set to number of spectroscopy columns
     x = data                                        # Initialise x matrix as column vector
@@ -43,11 +44,19 @@ def nn_matrix(data, rand_U=True, seed=0, L=1, U_limit=10):
     if rand_U:
         U = np.random.randint(1, U_limit-1, L-1)    # Randomly initialise U in shape [U1, ..., UL-1] if rand_U is True
         U = np.append(U, 1)                         # Add 1 to the end of U to match the output layer
+    else:
+        U = [w.shape[0] for w in pre_weights] if pre_weights is not None else np.random.randint(1, U_limit-1, L-1)
 
     # Initialise weights and bias
-    # Randomly initialise weight matrix W. W(1) has dimensions of U1 x p, W(l) has dimensions of Ul x Ul-1. W(L) has dimensions of 1 x UL.
-    weights = init_weights(p, U, L, seed)
-    biases = init_biases(U, L, seed)
+    if pre_weights is None:
+        weights = init_weights(p, U, L, seed)
+    else:
+        weights = pre_weights
+
+    if pre_biases is None:
+        biases = init_biases(U, L, seed)
+    else:
+        biases = pre_biases
 
     # q(l) = h(W(l) * q(l-1) + b(l))
     q = x

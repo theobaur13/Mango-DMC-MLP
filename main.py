@@ -4,7 +4,9 @@ import numpy as np
 from src.matrix import nn_matrix
 from src.loop import single_layer_nn_loop, two_layer_nn_loop, two_layer_nn_loop_input_layer, two_layer_nn_loop_hidden_layer
 
-data_path = os.path.join(os.path.dirname(__file__), "data", "test.csv")
+# file_name = "test.csv"
+file_name = "NAnderson2020MendeleyMangoNIRData.csv"
+data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
 
 def load_data(data_path):
     data = pd.read_csv(data_path)
@@ -26,7 +28,7 @@ def main():
     spectral_data, dry_matter = clean_data(data)
 
     # Single layer neural network
-    prediction = nn_matrix(spectral_data)
+    prediction = nn_matrix(spectral_data, L=1)
 
     if prediction is not None:
         for i in range(3):
