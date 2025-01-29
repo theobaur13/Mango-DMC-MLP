@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from src.matrix import single_layer_nn_matrix, two_layer_nn_matrix
+from src.matrix import single_layer_nn_matrix, two_layer_nn_matrix, deep_nn_matrix
 from src.loop import single_layer_nn_loop, two_layer_nn_loop, two_layer_nn_loop_input_layer, two_layer_nn_loop_hidden_layer
 
 data_path = os.path.join(os.path.dirname(__file__), "data", "test.csv")
@@ -26,7 +26,7 @@ def main():
     spectral_data, dry_matter = clean_data(data)
 
     # Single layer neural network
-    prediction = two_layer_nn_matrix(spectral_data)
+    prediction = deep_nn_matrix(spectral_data)
 
     if prediction is not None:
         for i in range(3):
