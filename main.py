@@ -28,6 +28,8 @@ def main():
     spectral_data, dry_matter = clean_data(data)
 
     # Hyperparameters
+    learning_rate = 0.01                        # Learning rate
+    epochs = 1000                                # Number of epochs
     seed = 1                                    # Seed for random number generator
     L = 2                                       # Number of layers
     # U = [5, 8, 1]                             # Shape of neural network U
@@ -43,11 +45,18 @@ def main():
     weights = init_weights(spectral_data.shape[1], U, L, seed)
     biases = init_biases(U, L, seed)
 
-    # Single layer neural network
-    prediction, activations = nn_matrix(spectral_data, U, L, weights, biases, seed)
+    for epoch in range(epochs):
+        # Forward pass
+        prediction, activations = nn_matrix(spectral_data, U, L, weights, biases, seed)
 
-    # Backpropogation
-    new_weights = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data)
+        # Backpropogation
+        weights = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data, learning_rate)
+
+        # Every 100 epochs, print the progress
+        if epoch % 10 == 0:
+            squared_error_value = squared_error(dry_matter, prediction)
+            absolute_error_value = absolute_error(dry_matter, prediction)
+            print(f"Epoch {epoch}: Squared Error = {squared_error_value}, Absolute Error = {absolute_error_value}")
     
     # Print prediction and actual values
     if prediction is not None:
