@@ -40,10 +40,39 @@ def nn_matrix(data, U, L, weights, biases, seed=0):
     p = data.shape[1]                               # Number of features set to number of spectroscopy columns
     x = data                                        # Initialise x matrix as column vector
 
+    activations = []
+
     # q(l) = h(W(l) * q(l-1) + b(l))
     q = x
     for i in range(L):
         q = np.dot(weights[i], q.T).T + biases[i]
         q = sigmoid(q)
+        activations.append(q)
 
-    return q
+    return q, activations
+
+def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.01):
+    layer_errors = []
+
+    # Calculate neuron error for output layer (neuron error = activation(1 - activation)(y - y_hat))
+    output_errors = activations[-1] * (1 - activations[-1]) * (y - y_hat)
+    layer_errors.append(output_errors)
+
+    # Calculate neuron error for hidden layers (neuron error = activation(1 - activation)(sum(forward weight from neuron * error forward neuron)))
+    errors = output_errors
+    for i in range(L-2, -1, -1):
+        hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])
+        errors = hidden_errors
+        layer_errors.append(hidden_errors)
+    
+    layer_errors = layer_errors[::-1]
+
+    # Calculate weight change for each layer (delta = learning rate * forward neuron error * activation of previous neuron)
+    for i in range(L):
+        if i == 0:
+            delta = learning_rate * np.dot(layer_errors[i].T, x)
+        else:
+            delta = learning_rate * np.dot(layer_errors[i].T, activations[i-1])
+        
+        weights[i] += delta
+    return weights

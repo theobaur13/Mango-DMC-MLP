@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from src.matrix import nn_matrix, init_weights, init_biases
+from src.matrix import nn_matrix, init_weights, init_biases, backpropogation
 from src.helper import squared_error, absolute_error
 
 file_name = "test.csv"
@@ -21,17 +21,17 @@ def clean_data(data):
     dry_matter = dry_matter.reshape(-1, 1)
 
     return spectral_data, dry_matter
- 
+
 def main():
     # Load data
     data = load_data(data_path)
     spectral_data, dry_matter = clean_data(data)
 
     # Hyperparameters
-    seed = 0                                    # Seed for random number generator
-    L = 3                                       # Number of layers
+    seed = 1                                    # Seed for random number generator
+    L = 2                                       # Number of layers
     # U = [5, 8, 1]                             # Shape of neural network U
-    U_limit = 10                                # Upper limit for number of hidden layer neurons
+    U_limit = 4                                 # Upper limit for number of hidden layer neurons
 
     # Create random shape of neural network U
     np.random.seed(seed)
@@ -44,8 +44,12 @@ def main():
     biases = init_biases(U, L, seed)
 
     # Single layer neural network
-    prediction = nn_matrix(spectral_data, U, L, weights, biases, seed)
+    prediction, activations = nn_matrix(spectral_data, U, L, weights, biases, seed)
 
+    # Backpropogation
+    new_weights = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data)
+    
+    # Print prediction and actual values
     if prediction is not None:
         for i in range(3):
             print(f"Prediction: {prediction[i]}, Actual: {dry_matter[i]}")
