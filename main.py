@@ -29,7 +29,7 @@ def main():
 
     # Hyperparameters
     learning_rate = 0.01                        # Learning rate
-    epochs = 1000                                # Number of epochs
+    epochs = 1                                  # Number of epochs
     seed = 1                                    # Seed for random number generator
     L = 2                                       # Number of layers
     # U = [5, 8, 1]                             # Shape of neural network U
@@ -53,7 +53,7 @@ def main():
         weights = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data, learning_rate)
 
         # Every 100 epochs, print the progress
-        if epoch % 10 == 0:
+        if epoch % 100 == 0:
             squared_error_value = squared_error(dry_matter, prediction)
             absolute_error_value = absolute_error(dry_matter, prediction)
             print(f"Epoch {epoch}: Squared Error = {squared_error_value}, Absolute Error = {absolute_error_value}")

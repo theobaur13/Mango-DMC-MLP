@@ -51,7 +51,7 @@ def nn_matrix(data, U, L, weights, biases, seed=0):
 
     return q, activations
 
-def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.01):
+def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate):
     layer_errors = []
 
     # Calculate neuron error for output layer (neuron error = activation(1 - activation)(y - y_hat))
@@ -68,11 +68,17 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=
     layer_errors = layer_errors[::-1]
 
     # Calculate weight change for each layer (delta = learning rate * forward neuron error * activation of previous neuron)
+    deltas = [np.zeros_like(w) for w in weights]
+
+    for row in range(x.shape[0]):
+        for i in range(L):
+            if i == 0:
+                delta = learning_rate * np.outer(layer_errors[i][row], x[row])
+            else:
+                delta = learning_rate * np.outer(layer_errors[i][row], activations[i-1][row])
+            deltas[i] += delta
+
     for i in range(L):
-        if i == 0:
-            delta = learning_rate * np.dot(layer_errors[i].T, x)
-        else:
-            delta = learning_rate * np.dot(layer_errors[i].T, activations[i-1])
-        
-        weights[i] += delta
+        weights[i] += deltas[i]
+
     return weights
