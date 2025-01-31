@@ -74,11 +74,14 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate)
         for i in range(L):
             if i == 0:
                 delta = learning_rate * np.outer(layer_errors[i][row], x[row])
+                bias_delta = learning_rate * layer_errors[i][row]
             else:
                 delta = learning_rate * np.outer(layer_errors[i][row], activations[i-1][row])
+                bias_delta = learning_rate * layer_errors[i][row]
             deltas[i] += delta
+            biases[i] += bias_delta
 
     for i in range(L):
         weights[i] += deltas[i]
 
-    return weights
+    return weights, biases

@@ -29,7 +29,7 @@ def main():
 
     # Hyperparameters
     learning_rate = 0.01                        # Learning rate
-    epochs = 1                                  # Number of epochs
+    epochs = 1000                               # Number of epochs
     seed = 1                                    # Seed for random number generator
     L = 2                                       # Number of layers
     # U = [5, 8, 1]                             # Shape of neural network U
@@ -50,7 +50,7 @@ def main():
         prediction, activations = nn_matrix(spectral_data, U, L, weights, biases, seed)
 
         # Backpropogation
-        weights = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data, learning_rate)
+        weights, biases = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data, learning_rate)
 
         # Every 100 epochs, print the progress
         if epoch % 100 == 0:
