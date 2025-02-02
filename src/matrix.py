@@ -37,16 +37,14 @@ def init_biases(U, L, seed=0):
 
 def nn_matrix(data, U, L, weights, biases, seed=0):
     # Calculate variables for input layer
-    p = data.shape[1]                               # Number of features set to number of spectroscopy columns
     x = data                                        # Initialise x matrix as column vector
-
     activations = []
 
     # q(l) = h(W(l) * q(l-1) + b(l))
     q = x
     for i in range(L):
         q = np.dot(weights[i], q.T).T + biases[i]
-        q = sigmoid(q)
+        q = relu(q)
         activations.append(q)
 
     return q, activations

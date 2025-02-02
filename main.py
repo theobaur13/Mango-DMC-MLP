@@ -1,11 +1,13 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 from src.matrix import nn_matrix, init_weights, init_biases, backpropogation
 from src.helper import squared_error, absolute_error
 
 file_name = "test.csv"
-# file_name = "NAnderson2020MendeleyMangoNIRData.csv"
+file_name = "NAnderson2020MendeleyMangoNIRData.csv"
 data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
 
 def load_data(data_path):
@@ -19,8 +21,17 @@ def clean_data(data):
     spectral_data = data.drop(columns=["DM"]).to_numpy()
     
     dry_matter = dry_matter.reshape(-1, 1)
-
+    
     return spectral_data, dry_matter
+
+def analyse_error(squared_error, absolute_error):
+    # Plot squared error and absolute error on the same graph
+    plt.plot(squared_error, label="Squared Error")
+    plt.plot(absolute_error, label="Absolute Error")
+    plt.xlabel("Epoch")
+    plt.ylabel("Error")
+    plt.legend()
+    plt.show()
 
 def main():
     # Load data
@@ -28,12 +39,13 @@ def main():
     spectral_data, dry_matter = clean_data(data)
 
     # Hyperparameters
-    learning_rate = 0.01                        # Learning rate
-    epochs = 1000                               # Number of epochs
+    learning_rate = 0.00000001                  # Learning rate
+    epochs = 14768                              # Number of epochs = 1000
     seed = 1                                    # Seed for random number generator
-    L = 2                                       # Number of layers
+    L = 5                                       # Number of layers
     # U = [5, 8, 1]                             # Shape of neural network U
-    U_limit = 4                                 # Upper limit for number of hidden layer neurons
+    U_limit = 8                                 # Upper limit for number of hidden layer neurons
+    print_level = 1                             # Print progress every print_level epochs
 
     # Create random shape of neural network U
     np.random.seed(seed)
@@ -41,21 +53,28 @@ def main():
     U = np.append(U, 1)                         # Add 1 to the end of U to match the output layer
     print(f"U: {U}")
 
+    # Initialise error storage
+    squared_error_values = []
+    absolute_error_values = []
+
     # Initialise weights and biases
     weights = init_weights(spectral_data.shape[1], U, L, seed)
     biases = init_biases(U, L, seed)
 
-    for epoch in range(epochs):
+    for epoch in tqdm(range(epochs)):
         # Forward pass
         prediction, activations = nn_matrix(spectral_data, U, L, weights, biases, seed)
-
+        
         # Backpropogation
         weights, biases = backpropogation(dry_matter, prediction, activations, weights, biases, L, spectral_data, learning_rate)
 
         # Every 100 epochs, print the progress
-        if epoch % 100 == 0:
+        if epoch % print_level == 0:
             squared_error_value = squared_error(dry_matter, prediction)
             absolute_error_value = absolute_error(dry_matter, prediction)
+
+            squared_error_values.append(squared_error_value)
+            absolute_error_values.append(absolute_error_value)
             print(f"Epoch {epoch}: Squared Error = {squared_error_value}, Absolute Error = {absolute_error_value}")
     
     # Print prediction and actual values
@@ -68,6 +87,9 @@ def main():
 
     print(f"Squared error: {squared_error_value}")
     print(f"Absolute error: {absolute_error_value}")
+
+    # Run error analysis
+    analyse_error(squared_error_values, absolute_error_values)
 
 if __name__ == "__main__":
     main()
