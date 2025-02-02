@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from src.matrix import nn_matrix, init_weights, init_biases, backpropogation
+from src.neural_network import nn_matrix, init_weights, init_biases, backpropogation
 from src.helper import squared_error, absolute_error
 
 file_name = "test.csv"
