@@ -49,7 +49,7 @@ def nn_matrix(data, U, L, weights, biases, seed=0):
 
     return q, activations
 
-def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate):
+def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate, regularisation_lambda=1):
     layer_errors = []
 
     # Calculate neuron error for output layer (neuron error = activation(1 - activation)(y - y_hat))
@@ -58,6 +58,7 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate)
 
     # Calculate neuron error for hidden layers (neuron error = activation(1 - activation)(sum(forward weight from neuron * error forward neuron)))
     errors = output_errors
+
     for i in range(L-2, -1, -1):
         hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])
         errors = hidden_errors
@@ -72,14 +73,16 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate)
         for i in range(L):
             if i == 0:
                 delta = learning_rate * np.outer(layer_errors[i][row], x[row])
-                bias_delta = learning_rate * layer_errors[i][row]
+                bias = learning_rate * layer_errors[i][row]
             else:
                 delta = learning_rate * np.outer(layer_errors[i][row], activations[i-1][row])
-                bias_delta = learning_rate * layer_errors[i][row]
-            deltas[i] += delta
-            biases[i] += bias_delta
+                bias = learning_rate * layer_errors[i][row]
 
+            deltas[i] += delta
+            biases[i] += bias
+
+    # Update weights
     for i in range(L):
-        weights[i] += deltas[i]
+        weights[i] += deltas[i] - regularisation_lambda * weights[i]
 
     return weights, biases
