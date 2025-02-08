@@ -1,4 +1,5 @@
 import os
+import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from src.helper import squared_error, absolute_error
 file_name = "test.csv"
 file_name = "NAnderson2020MendeleyMangoNIRData.csv"
 data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
+model_path = os.path.join(os.path.dirname(__file__), "model")
 
 def load_data(data_path):
     data = pd.read_csv(data_path)
@@ -23,6 +25,28 @@ def clean_data(data):
     dry_matter = dry_matter.reshape(-1, 1)
     
     return spectral_data, dry_matter
+
+def save_model(weights, biases, path, file_prefix="model"):
+    # Ensure the directory exists
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    # Save weights and biases using pickle
+    with open(f"{path}/{file_prefix}_weights.pkl", "wb") as f:
+        pickle.dump(weights, f)
+    
+    with open(f"{path}/{file_prefix}_biases.pkl", "wb") as f:
+        pickle.dump(biases, f)
+
+def load_model(path, file_prefix="model", L=None):
+    # Load weights and biases using pickle
+    with open(f"{path}/{file_prefix}_weights.pkl", "rb") as f:
+        weights = pickle.load(f)
+    
+    with open(f"{path}/{file_prefix}_biases.pkl", "rb") as f:
+        biases = pickle.load(f)
+    
+    return weights, biases
 
 def analyse_error(squared_error, absolute_error):
     # Plot squared error and absolute error on the same graph
@@ -40,7 +64,8 @@ def main():
 
     # Hyperparameters
     learning_rate = 0.00000001                  # Learning rate
-    epochs = 14768                              # Number of epochs = 1000
+    # epochs = 14768                              # Number of epochs = 1000
+    epochs = 10
     seed = 1                                    # Seed for random number generator
     L = 5                                       # Number of layers
     # U = [5, 8, 1]                             # Shape of neural network U
@@ -77,6 +102,9 @@ def main():
             absolute_error_values.append(absolute_error_value)
             print(f"Epoch {epoch}: Squared Error = {squared_error_value}, Absolute Error = {absolute_error_value}")
     
+    # Save model
+    save_model(weights, biases, model_path)
+
     # Print prediction and actual values
     if prediction is not None:
         for i in range(3):
