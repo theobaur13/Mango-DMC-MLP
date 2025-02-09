@@ -35,15 +35,14 @@ def init_biases(U, L, seed=0):
 # U = number of hidden layer neurons
 # L = number of layers
 
-def nn_matrix(data, U, L, weights, biases, seed=0):
+def nn_matrix(x, L, weights, biases):
     # Calculate variables for input layer
-    x = data                                        # Initialise x matrix as column vector
     activations = []
 
     # q(l) = h(W(l) * q(l-1) + b(l))
     q = x
     for i in range(L):
-        q = np.dot(weights[i], q.T).T + biases[i]
+        q = np.dot(q, weights[i].T) + biases[i]
         q = relu(q)
         activations.append(q)
 
@@ -68,6 +67,7 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate,
 
     # Calculate weight change for each layer (delta = learning rate * forward neuron error * activation of previous neuron)
     deltas = [np.zeros_like(w) for w in weights]
+    bias_deltas = [np.zeros_like(b) for b in biases]
 
     for row in range(x.shape[0]):
         for i in range(L):
@@ -79,10 +79,11 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate,
                 bias = learning_rate * layer_errors[i][row]
 
             deltas[i] += delta
-            biases[i] += bias
+            bias_deltas[i] += bias
 
     # Update weights
     for i in range(L):
-        weights[i] += deltas[i] - regularisation_lambda * weights[i]
+        weights[i] -= deltas[i] - regularisation_lambda * weights[i]
+        biases[i] -= bias_deltas[i]
 
     return weights, biases
