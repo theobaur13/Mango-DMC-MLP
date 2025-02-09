@@ -5,8 +5,8 @@ from src.neural_network import nn_matrix, init_weights, init_biases, backpropoga
 from src.helper import mean_squared_error, mean_absolute_error
 from src.utils import load_data, clean_data, save_model, load_model, analyse_error
 
-# file_name = "test.csv"
-file_name = "NAnderson2020MendeleyMangoNIRData.csv"
+file_name = "test.csv"
+# file_name = "NAnderson2020MendeleyMangoNIRData.csv"
 data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
 model_path = os.path.join(os.path.dirname(__file__), "model")
 
@@ -17,11 +17,11 @@ def main():
 
     # Hyperparameters
     learning_rate = 0.001                       # Learning rate
-    epochs = 50                                 # Number of epochs
-    regularisation_lambda = 0.1                 # Regularisation parameter
-    seed = 1                                    # Seed for random number generator
+    epochs = 100                                  # Number of epochs
+    regularisation_lambda = 0.0001              # Regularisation parameter
+    seed = 2                                    # Seed for random number generator
     L = 3                                       # Number of layers
-    U = [306, 5, 1]                               # Shape of neural network U includes the input layer and output neuron
+    U = [5, 5, 1]                             # Shape of neural network U includes the input layer and output neuron
     print_level = 1                             # Print progress every print_level epochs
 
     print(f"U: {U}")

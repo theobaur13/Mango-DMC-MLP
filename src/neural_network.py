@@ -1,5 +1,5 @@
 import numpy as np
-from src.helper import sigmoid, relu
+from src.helper import sigmoid, relu, identity
 
 def init_weights(p, U, L, seed):
     np.random.seed(seed)
@@ -42,44 +42,45 @@ def nn_matrix(x, L, weights, biases):
     # q(l) = h(W(l) * q(l-1) + b(l))
     q = x
     for i in range(L):
-        q = np.dot(q, weights[i].T) + biases[i]
-        q = relu(q)
-        activations.append(q)
-
+        # Hidden layers
+        if i != L-1:
+            q = np.dot(q, weights[i].T) + biases[i]
+            q = relu(q)
+            activations.append(q)
+        # Output layer
+        else:
+            q = np.dot(q, weights[i].T) + biases[i]
+            q = identity(q)
+            activations.append(q)
+    
     return q, activations
 
-def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate, regularisation_lambda=1):
+def relu_derivative(q):
+    # Derivative of ReLU: 1 if q > 0, else 0
+    return np.where(q > 0, 1, 0)
+
+def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.001, regularisation_lambda=1, regularisation=1):
     layer_errors = []
 
     # Calculate neuron error for output layer (neuron error = activation(1 - activation)(y - y_hat))
-    output_errors = activations[-1] * (1 - activations[-1]) * (y - y_hat)
+    output_errors = activations[-1] * (1 - activations[-1]) * (y - y_hat)   # Sigmoid derivative
+    # output_errors = y - y_hat                                             # Identity derivative
     layer_errors.append(output_errors)
 
     # Calculate neuron error for hidden layers (neuron error = activation(1 - activation)(sum(forward weight from neuron * error forward neuron)))
     errors = output_errors
 
     for i in range(L-2, -1, -1):
-        hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])
+        hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])    # Sigmoid derivative
+        # hidden_errors = relu_derivative(activations[i]) * np.dot(errors, weights[i+1])        # ReLU derivative
         errors = hidden_errors
         layer_errors.append(hidden_errors)
-    
+
     layer_errors = layer_errors[::-1]
 
     # Calculate weight change for each layer (delta = learning rate * forward neuron error * activation of previous neuron)
     deltas = [np.zeros_like(w) for w in weights]
     bias_deltas = [np.zeros_like(b) for b in biases]
-
-    # for row in range(x.shape[0]):
-    #     for i in range(L):
-    #         if i == 0:
-    #             delta = learning_rate * np.outer(layer_errors[i][row], x[row])
-    #             bias = learning_rate * layer_errors[i][row]
-    #         else:
-    #             delta = learning_rate * np.outer(layer_errors[i][row], activations[i-1][row])
-    #             bias = learning_rate * layer_errors[i][row]
-
-    #         deltas[i] += delta
-    #         bias_deltas[i] += bias
 
     for i in range(L):
         if i == 0:
@@ -94,7 +95,12 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate,
 
     # Update weights
     for i in range(L):
-        weights[i] -= deltas[i] - regularisation_lambda * weights[i]
+        weights[i] -= deltas[i]
+        if regularisation == 1:
+            weights[i] -= regularisation_lambda * np.sign(weights[i])  # L1 regularization
+        elif regularisation == 2:
+            weights[i] -= regularisation_lambda * weights[i]    # L2 Regularisation
+        
         biases[i] -= bias_deltas[i]
 
     return weights, biases

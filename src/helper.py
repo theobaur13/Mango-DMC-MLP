@@ -6,6 +6,9 @@ def sigmoid(x):
 def relu(x):
     return np.maximum(0, x)
 
+def identity(x):
+    return x
+
 def mean_squared_error(y, y_hat):
     return np.mean((y - y_hat) ** 2)
 
