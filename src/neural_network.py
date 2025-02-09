@@ -69,17 +69,28 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate,
     deltas = [np.zeros_like(w) for w in weights]
     bias_deltas = [np.zeros_like(b) for b in biases]
 
-    for row in range(x.shape[0]):
-        for i in range(L):
-            if i == 0:
-                delta = learning_rate * np.outer(layer_errors[i][row], x[row])
-                bias = learning_rate * layer_errors[i][row]
-            else:
-                delta = learning_rate * np.outer(layer_errors[i][row], activations[i-1][row])
-                bias = learning_rate * layer_errors[i][row]
+    # for row in range(x.shape[0]):
+    #     for i in range(L):
+    #         if i == 0:
+    #             delta = learning_rate * np.outer(layer_errors[i][row], x[row])
+    #             bias = learning_rate * layer_errors[i][row]
+    #         else:
+    #             delta = learning_rate * np.outer(layer_errors[i][row], activations[i-1][row])
+    #             bias = learning_rate * layer_errors[i][row]
 
-            deltas[i] += delta
-            bias_deltas[i] += bias
+    #         deltas[i] += delta
+    #         bias_deltas[i] += bias
+
+    for i in range(L):
+        if i == 0:
+            delta = learning_rate * np.dot(layer_errors[i].T, x)
+            bias = learning_rate * np.sum(layer_errors[i], axis=0)
+        else:
+            delta = learning_rate * np.dot(layer_errors[i].T, activations[i-1])
+            bias = learning_rate * np.sum(layer_errors[i], axis=0)
+
+        deltas[i] += delta
+        bias_deltas[i] += bias
 
     # Update weights
     for i in range(L):
