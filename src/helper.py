@@ -6,6 +6,15 @@ def sigmoid(x):
 def relu(x):
     return np.maximum(0, x)
 
+def relu_derivative(q):
+    return np.where(q > 0, 1, 0)
+
+def leaky_relu(x, alpha=0.01):
+    return np.where(x > 0, x, alpha * x)
+
+def leaky_relu_derivative(q, alpha=0.01):
+    return np.where(q > 0, 1, alpha)
+
 def identity(x):
     return x
 
