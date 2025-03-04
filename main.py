@@ -1,27 +1,23 @@
 import os
+import sys
 import numpy as np
 from tqdm import tqdm
 from src.neural_network import nn_matrix, init_weights, init_biases, backpropogation
 from src.helper import mean_squared_error, mean_absolute_error
-from src.utils import load_data, clean_data, save_model, load_model, analyse_error
+from src.utils import load_data, clean_data, save_model, load_model, analyse_error, analyse_prediction
 
-file_name = "test.csv"
-# file_name = "NAnderson2020MendeleyMangoNIRData.csv"
-data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
-model_path = os.path.join(os.path.dirname(__file__), "model")
-
-def main():
+def main(data_path, model_path):
     # Load data
     data = load_data(data_path)
     spectral_data, dry_matter = clean_data(data)
 
     # Hyperparameters
-    learning_rate = 0.001                       # Learning rate
-    epochs = 100                                  # Number of epochs
-    regularisation_lambda = 0.0001              # Regularisation parameter
-    seed = 2                                    # Seed for random number generator
+    learning_rate = 0.0000000001                # Learning rate
+    epochs = 100                                # Number of epochs
+    regularisation_lambda = 0.0000000001        # Regularisation parameter
+    seed = 4                                    # Seed for random number generator
     L = 3                                       # Number of layers
-    U = [5, 5, 1]                             # Shape of neural network U includes the input layer and output neuron
+    U = [281, 100, 1]                           # Shape of neural network U includes the input layer and output neuron
     print_level = 1                             # Print progress every print_level epochs
 
     print(f"U: {U}")
@@ -57,6 +53,7 @@ def main():
         # Every 100 epochs, print the progress
         if epoch % print_level == 0:
             print(f"Epoch {epoch}: Mean Squared Error = {squared_error_value}, Mean Absolute Error = {absolute_error_value}")
+            print(f"Prediction: {prediction[0]}, Actual: {dry_matter[0]}")
 
     # Save model
     save_model(weights, biases, model_path)
@@ -75,5 +72,12 @@ def main():
     # Run error analysis
     analyse_error(squared_error_values, absolute_error_values)
 
+    # Run prediction analysis
+    analyse_prediction(prediction, dry_matter)
+
 if __name__ == "__main__":
-    main()
+    file_name = sys.argv[1]
+    data_path = os.path.join(os.path.dirname(__file__), "data", file_name)
+    model_path = os.path.join(os.path.dirname(__file__), "model")
+
+    main(data_path, model_path)
