@@ -1,30 +1,40 @@
 import numpy as np
-from src.helper import sigmoid, relu, identity
+from src.helper import sigmoid, relu, identity, relu_derivative, leaky_relu, leaky_relu_derivative
 
-def init_weights(p, U, L, seed):
+def init_weights(p, U, L, seed, activation="relu"):
     np.random.seed(seed)
     
     # Randomly initialise weight matrix W. W(1) has dimensions of U1 x p, W(l) has dimensions of Ul x Ul-1. W(L) has dimensions of 1 x UL.
     weights = []
     for i in range(L):
-        if i == 0 and L == 1:
-            weights.append(np.random.rand(1, p))                # Randomly initialise input layer weight matrix of shape    W(1) = (p, 1)
-        elif i == 0:
-            weights.append(np.random.rand(U[i], p))             # Randomly initialise input layer weight matrix of shape    W(1) = (p, U)
-        elif i == L-1:
-            weights.append(np.random.rand(1, U[i-1]))           # Randomly initialise output layer weight matrix of shape   W(L) = (1, UL-1)
-        else:
-            weights.append(np.random.rand(U[i], U[i-1]))        # Randomly initialise hidden layer weight matrix of shape   W(l) = (Ul, Ul-1)
+        if activation == "relu":
+            if i == 0 and L == 1:
+                weights.append(np.random.rand(1, p) * np.sqrt(2 / p))                # Randomly initialise input layer weight matrix of shape    W(1) = (p, 1)
+            elif i == 0:
+                weights.append(np.random.rand(U[i], p) * np.sqrt(2 / p))             # Randomly initialise input layer weight matrix of shape    W(1) = (p, U)
+            elif i == L-1:
+                weights.append(np.random.rand(1, U[i-1]) * np.sqrt(2 / U[i-1]))           # Randomly initialise output layer weight matrix of shape   W(L) = (1, UL-1)
+            else:
+                weights.append(np.random.rand(U[i], U[i-1]) * np.sqrt(2 / U[i-1]))        # Randomly initialise hidden layer weight matrix of shape   W(l) = (Ul, Ul-1)
+        elif activation == "sigmoid":
+            if i == 0 and L == 1:
+                weights.append(np.random.randn(1, p) * np.sqrt(1 / p))
+            elif i == 0:
+                weights.append(np.random.randn(U[i], p) * np.sqrt(1 / p))
+            elif i == L-1:
+                weights.append(np.random.randn(1, U[i-1]) * np.sqrt(1 / U[i-1]))
+            else:
+                weights.append(np.random.randn(U[i], U[i-1]) * np.sqrt(1 / U[i-1]))
     return weights
 
 def init_biases(U, L, seed=0):
     np.random.seed(seed)
     biases = []
     if L == 1:
-        biases.append(np.random.rand())
+        biases.append(np.zeros(1))
     else:
         for i in range(L):
-            biases.append(np.random.rand(U[i]))
+            biases.append(np.zeros(U[i]))
     return biases
 
 # h = activation function
@@ -55,24 +65,25 @@ def nn_matrix(x, L, weights, biases):
     
     return q, activations
 
-def relu_derivative(q):
-    # Derivative of ReLU: 1 if q > 0, else 0
-    return np.where(q > 0, 1, 0)
+def clip_gradients(gradients, threshold=1):
+    for i in range(len(gradients)):
+        gradients[i] = np.clip(gradients[i], -threshold, threshold)
+    return gradients
 
-def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.001, regularisation_lambda=1, regularisation=1):
+def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.001, regularisation_lambda=0.1, regularisation=2):
     layer_errors = []
 
     # Calculate neuron error for output layer (neuron error = activation(1 - activation)(y - y_hat))
-    output_errors = activations[-1] * (1 - activations[-1]) * (y - y_hat)   # Sigmoid derivative
-    # output_errors = y - y_hat                                             # Identity derivative
+    # output_errors = activations[-1] * (1 - activations[-1]) * (y - y_hat)   # Sigmoid derivative
+    output_errors = y - y_hat                                             # Identity derivative
     layer_errors.append(output_errors)
 
     # Calculate neuron error for hidden layers (neuron error = activation(1 - activation)(sum(forward weight from neuron * error forward neuron)))
     errors = output_errors
 
     for i in range(L-2, -1, -1):
-        hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])    # Sigmoid derivative
-        # hidden_errors = relu_derivative(activations[i]) * np.dot(errors, weights[i+1])        # ReLU derivative
+        # hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])    # Sigmoid derivative
+        hidden_errors = relu_derivative(activations[i]) * np.dot(errors, weights[i+1])        # ReLU derivative
         errors = hidden_errors
         layer_errors.append(hidden_errors)
 
@@ -93,14 +104,18 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=
         deltas[i] += delta
         bias_deltas[i] += bias
 
+    # Clip gradients
+    deltas = clip_gradients(deltas)
+    bias_deltas = clip_gradients(bias_deltas)
+
     # Update weights
     for i in range(L):
-        weights[i] -= deltas[i]
+        weights[i] += deltas[i]
         if regularisation == 1:
-            weights[i] -= regularisation_lambda * np.sign(weights[i])  # L1 regularization
+            weights[i] += regularisation_lambda * np.sign(weights[i])  # L1 regularization
         elif regularisation == 2:
-            weights[i] -= regularisation_lambda * weights[i]    # L2 Regularisation
+            weights[i] += regularisation_lambda * weights[i]    # L2 Regularisation
         
-        biases[i] -= bias_deltas[i]
-
+        biases[i] += bias_deltas[i]
+        
     return weights, biases
