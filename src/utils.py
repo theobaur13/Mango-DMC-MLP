@@ -37,6 +37,16 @@ def clean_data(data):
     
     return spectral_data, dry_matter
 
+def split_data(spectral_data, dry_matter, train_size=0.8):
+    # Split data into training and testing sets
+    split_index = int(spectral_data.shape[0] * train_size)
+    train_spectral_data = spectral_data[:split_index]
+    test_spectral_data = spectral_data[split_index:]
+    train_dry_matter = dry_matter[:split_index]
+    test_dry_matter = dry_matter[split_index:]
+    
+    return train_spectral_data, test_spectral_data, train_dry_matter, test_dry_matter
+
 def save_model(weights, biases, path, file_prefix="model"):
     # Ensure the directory exists
     if not os.path.exists(path):
