@@ -2,6 +2,8 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+from tqdm import tqdm
 
 def load_data(data_path):
     data = pd.read_csv(data_path)
@@ -9,15 +11,30 @@ def load_data(data_path):
 
 def clean_data(data):
     # Drop columns that are not needed
-    data = data.drop(columns=["Set","Season", "Region", "Date", "Type", "Cultivar", "Pop", "Temp"])
-    dry_matter = data["DM"].to_numpy()
+    columns_to_drop = ["Set", "Season", "Region", "Date", "Type", "Cultivar", "Pop", "Temp"]
+    columns_to_drop = [col for col in columns_to_drop if col in data.columns]
+    data = data.drop(columns=columns_to_drop)
+
     spectral_data = data.drop(columns=["DM"]).to_numpy()
-    
+    dry_matter = data["DM"].to_numpy()
     dry_matter = dry_matter.reshape(-1, 1)
     
+    # Remove columns with all zeros
+    print(f"Columns before removing all zeros: {spectral_data.shape[1]}")
+    spectral_data = spectral_data[:, ~np.all(spectral_data == 0, axis=0)]
+    print(f"Columns after removing all zeros: {spectral_data.shape[1]}")
+
+    # Remove rows that contain more than x zeros and their associated dry matter value
+    print(f"Rows before removing zeros: {spectral_data.shape[0]}")
+    zeros = np.sum(spectral_data == 0, axis=1)
+    mask = zeros <= 10
+    spectral_data = spectral_data[mask]
+    dry_matter = dry_matter[mask]
+    print(f"Rows after removing zeros: {spectral_data.shape[0]}")
+
     # Standardise the spectral data to be between 0 and 1
     spectral_data = (spectral_data + 1) / 2
-
+    
     return spectral_data, dry_matter
 
 def save_model(weights, biases, path, file_prefix="model"):
@@ -63,4 +80,11 @@ def analyse_error(squared_error, absolute_error):
     ax2.tick_params(axis='y', labelcolor=color)
 
     fig.tight_layout()
+    plt.show()
+
+def analyse_prediction(prediction, actual):
+    # Plot the prediction and actual values
+    plt.plot(prediction, label="Prediction")
+    plt.plot(actual, label="Actual")
+    plt.legend()
     plt.show()
