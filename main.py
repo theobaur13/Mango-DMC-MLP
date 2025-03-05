@@ -16,6 +16,9 @@ def main(data_path, model_path):
     learning_rate = 0.000001                    # Learning rate
     epochs = 5000                               # Number of epochs
     regularisation_lambda = 0.00000001          # Regularisation parameter
+    clip_threshold = 0.001                      # Threshold for clipping gradients
+    regularisation = 2                          # Regularisation type (1 = L1, 2 = L2)
+    hidden_activation = "relu"                  # Activation function for hidden layers
     seed = 2                                    # Seed for random number generator
     L = 4                                       # Number of layers
     U = [200, 50, 10, 1]                        # Shape of neural network U includes the input layer and output neuron
@@ -29,15 +32,34 @@ def main(data_path, model_path):
 
     # Randomly Initialise weights and biases
     np.random.seed(seed)
-    weights = init_weights(spectral_data.shape[1], U, L, seed)
-    biases = init_biases(U, L, seed)
+    weights = init_weights(spectral_data.shape[1], U, L, seed, hidden_activation)
+    biases = init_biases(U, L)
 
     for epoch in tqdm(range(epochs)):
         # Forward pass
-        prediction, activations = nn_matrix(train_spectral_data, L, weights, biases)
+        prediction, activations = nn_matrix(
+            train_spectral_data,
+            L,
+            weights,
+            biases,
+            hidden_activation
+        )
 
         # Backpropogation
-        weights, biases = backpropogation(train_dry_matter, prediction, activations, weights, biases, L, train_spectral_data, learning_rate, regularisation_lambda)
+        weights, biases = backpropogation(
+            train_dry_matter,
+            prediction,
+            activations,
+            weights,
+            biases,
+            L,
+            train_spectral_data, 
+            learning_rate, 
+            regularisation_lambda, 
+            regularisation, 
+            clip_threshold, 
+            hidden_activation
+        )
 
         # Calculate error
         squared_error_value = mean_squared_error(train_dry_matter, prediction)

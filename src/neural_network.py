@@ -27,8 +27,7 @@ def init_weights(p, U, L, seed, activation="relu"):
                 weights.append(np.random.randn(U[i], U[i-1]) * np.sqrt(1 / U[i-1]))
     return weights
 
-def init_biases(U, L, seed=0):
-    np.random.seed(seed)
+def init_biases(U, L):
     biases = []
     if L == 1:
         biases.append(np.zeros(1))
@@ -45,7 +44,7 @@ def init_biases(U, L, seed=0):
 # U = number of hidden layer neurons
 # L = number of layers
 
-def nn_matrix(x, L, weights, biases):
+def nn_matrix(x, L, weights, biases, hidden_activation="relu"):
     # Calculate variables for input layer
     activations = []
 
@@ -55,7 +54,10 @@ def nn_matrix(x, L, weights, biases):
         # Hidden layers
         if i != L-1:
             q = np.dot(q, weights[i].T) + biases[i]
-            q = relu(q)
+            if hidden_activation == "relu":
+                q = relu(q)
+            elif hidden_activation == "sigmoid":
+                q = sigmoid(q)
             activations.append(q)
         # Output layer
         else:
@@ -70,11 +72,10 @@ def clip_gradients(gradients, threshold=0.001):
         gradients[i] = np.clip(gradients[i], -threshold, threshold)
     return gradients
 
-def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.001, regularisation_lambda=0.1, regularisation=2):
+def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=0.001, regularisation_lambda=0.1, regularisation=2, clip_threshold=0.001, hidden_activation="relu"):
     layer_errors = []
 
     # Calculate neuron error for output layer (neuron error = activation(1 - activation)(y - y_hat))
-    # output_errors = activations[-1] * (1 - activations[-1]) * (y - y_hat)   # Sigmoid derivative
     output_errors = y - y_hat                                             # Identity derivative
     layer_errors.append(output_errors)
 
@@ -82,8 +83,10 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=
     errors = output_errors
 
     for i in range(L-2, -1, -1):
-        # hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])    # Sigmoid derivative
-        hidden_errors = relu_derivative(activations[i]) * np.dot(errors, weights[i+1])        # ReLU derivative
+        if hidden_activation == "relu":
+            hidden_errors = relu_derivative(activations[i]) * np.dot(errors, weights[i+1])        # ReLU derivative
+        elif hidden_activation == "sigmoid":
+            hidden_errors = activations[i] * (1 - activations[i]) * np.dot(errors, weights[i+1])    # Sigmoid derivative
         errors = hidden_errors
         layer_errors.append(hidden_errors)
 
@@ -105,8 +108,8 @@ def backpropogation(y, y_hat, activations, weights, biases, L, x, learning_rate=
         bias_deltas[i] += bias
 
     # Clip gradients
-    deltas = clip_gradients(deltas)
-    bias_deltas = clip_gradients(bias_deltas)
+    deltas = clip_gradients(deltas, clip_threshold)
+    bias_deltas = clip_gradients(bias_deltas, clip_threshold)
 
     # Update weights
     for i in range(L):
