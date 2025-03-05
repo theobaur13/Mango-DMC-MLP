@@ -13,13 +13,13 @@ def main(data_path, model_path):
     train_spectral_data, test_spectral_data, train_dry_matter, test_dry_matter = split_data(spectral_data, dry_matter)
 
     # Hyperparameters
-    learning_rate = 0.0000000001                # Learning rate
-    epochs = 150                                # Number of epochs
-    regularisation_lambda = 0.0000000001        # Regularisation parameter
-    seed = 4                                    # Seed for random number generator
+    learning_rate = 0.000001                    # Learning rate
+    epochs = 5000                               # Number of epochs
+    regularisation_lambda = 0.00000001          # Regularisation parameter
+    seed = 2                                    # Seed for random number generator
     L = 4                                       # Number of layers
-    U = [100, 50, 10, 1]                        # Shape of neural network U includes the input layer and output neuron
-    print_level = 50                            # Print progress every print_level epochs
+    U = [200, 50, 10, 1]                        # Shape of neural network U includes the input layer and output neuron
+    print_level = 20                            # Print progress every print_level epochs
 
     print(f"U: {U}")
 
@@ -31,11 +31,6 @@ def main(data_path, model_path):
     np.random.seed(seed)
     weights = init_weights(spectral_data.shape[1], U, L, seed)
     biases = init_biases(U, L, seed)
-
-    # weights, biases = load_model(model_path, file_prefix="optimal")
-
-    # for i in range(L):
-    #     weights[i] = weights[i].T
 
     for epoch in tqdm(range(epochs)):
         # Forward pass
@@ -61,7 +56,7 @@ def main(data_path, model_path):
 
     # Print prediction and actual values with test data
     prediction, _ = nn_matrix(test_spectral_data, L, weights, biases)
-    for i in range(3):
+    for i in range(len(prediction)):
         print(f"Prediction: {prediction[i]}, Actual: {test_dry_matter[i]}")
 
     squared_error_value = mean_squared_error(test_dry_matter, prediction)

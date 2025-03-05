@@ -65,7 +65,7 @@ def nn_matrix(x, L, weights, biases):
     
     return q, activations
 
-def clip_gradients(gradients, threshold=1):
+def clip_gradients(gradients, threshold=0.001):
     for i in range(len(gradients)):
         gradients[i] = np.clip(gradients[i], -threshold, threshold)
     return gradients

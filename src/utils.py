@@ -71,8 +71,8 @@ def load_model(path, file_prefix="model"):
 
 def analyse_error(squared_error, absolute_error):
     # Remove the first value from the error arrays as it is always very large
-    squared_error = squared_error[1:]
-    absolute_error = absolute_error[1:]
+    squared_error = squared_error[50:]
+    absolute_error = absolute_error[50:]
 
     # Plot squared error and absolute error on the same graph but with different y-axis
     fig, ax1 = plt.subplots()
@@ -96,5 +96,6 @@ def analyse_prediction(prediction, actual):
     # Plot the prediction and actual values
     plt.plot(prediction, label="Prediction")
     plt.plot(actual, label="Actual")
+    plt.ylim(bottom=0)
     plt.legend()
     plt.show()
